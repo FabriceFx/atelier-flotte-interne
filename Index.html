@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <base target="_top">
+    <meta charset="utf-8">
+    <title>Gestion Flotte Automobile</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <style>
+      body { background-color: #f8f9fa; font-family: 'Segoe UI', system-ui, sans-serif; }
+      
+      /* Gestion de l'affichage SPA (Single Page App) */
+      .section-app { display: none; }
+      .active-section { display: block; animation: fadeIn 0.4s ease-in-out; }
+      
+      @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+      
+      .navbar { box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+      .card { border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-radius: 12px; }
+      .table-hover tbody tr:hover { background-color: #f1f3f5; }
+    </style>
+  </head>
+  <body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
+      <div class="container">
+        <a class="navbar-brand fw-bold" href="#">
+          <i class="bi bi-car-front-fill me-2"></i>Flotte Auto
+        </a>
+        
+        <div class="d-flex text-white align-items-center">
+           <span id="userEmail" class="me-3 small opacity-75 d-none d-md-block">Chargement...</span>
+           
+           <button id="btnSwitchAdmin" class="btn btn-sm btn-light text-primary fw-bold d-none shadow-sm" onclick="basculerVue('garage')">
+             <i class="bi bi-tools me-1"></i> Accès Atelier
+           </button>
+           
+           <button id="btnSwitchDriver" class="btn btn-sm btn-outline-light ms-2 d-none" onclick="basculerVue('conducteur')">
+             <i class="bi bi-person me-1"></i> Vue Conducteur
+           </button>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container mt-5">
+
+      <div id="vue-conducteur" class="section-app active-section">
+        <div class="row justify-content-center">
+          <div class="col-md-8 col-lg-6">
+            <div class="text-center mb-4">
+              <h2 class="fw-bold text-secondary">Déclarer une intervention</h2>
+              <p class="text-muted">Remplissez ce formulaire pour notifier l'atelier.</p>
+            </div>
+
+            <div class="card p-4">
+              <form id="formReparation">
+                <div class="mb-3">
+                  <label class="form-label fw-semibold">Conducteur</label>
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-person"></i></span>
+                    <input type="text" class="form-control" name="nomConducteur" required placeholder="Nom Prénom">
+                  </div>
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-label fw-semibold">Email Professionnel</label>
+                  <input type="email" class="form-control bg-light" name="emailConducteur" id="inputEmail" readonly>
+                  <div class="form-text">Votre email est détecté automatiquement.</div>
+                </div>
+
+                <div class="row">
+                  <div class="col-md-6 mb-3">
+                    <label class="form-label fw-semibold">Véhicule</label>
+                    <input type="text" class="form-control" name="vehicule" required placeholder="Immatriculation">
+                  </div>
+                  <div class="col-md-6 mb-3">
+                    <label class="form-label fw-semibold">Garage Préféré</label>
+                    <select class="form-select" name="garage">
+                      <option>Garage Nord</option>
+                      <option>Garage Sud</option>
+                      <option>Siège</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-label fw-semibold">Description du problème</label>
+                  <textarea class="form-control" name="description" rows="4" required placeholder="Ex: Voyant moteur allumé, révision des 50 000km..."></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 py-2 fw-bold">
+                  <i class="bi bi-send me-2"></i>Envoyer la demande
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="vue-garage" class="section-app">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h3 class="fw-bold text-primary"><i class="bi bi-speedometer2 me-2"></i>Tableau de Bord Atelier</h3>
+          <button class="btn btn-outline-secondary btn-sm" onclick="chargerDonneesGarage()">
+            <i class="bi bi-arrow-clockwise me-1"></i>Actualiser
+          </button>
+        </div>
+        
+        <div class="card shadow-sm">
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th class="ps-4">Véhicule / Garage</th>
+                    <th>Conducteur</th>
+                    <th>Statut</th>
+                    <th>Intervention</th>
+                    <th class="text-end pe-4">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="corpsTableau">
+                  </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="modal fade" id="modalPlanif" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title fw-bold">Gérer l'intervention</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" id="hiddenId">
+            
+            <div class="mb-3">
+              <label class="form-label">Date d'intervention prévue</label>
+              <input type="date" class="form-control" id="modalDate">
+            </div>
+            
+            <div class="mb-3">
+               <label class="form-label">Statut de la demande</label>
+               <select class="form-select" id="modalStatut">
+                 <option value="EN_ATTENTE">En Attente</option>
+                 <option value="PLANIFIE">Planifié (Notifie le conducteur)</option>
+                 <option value="EN_COURS">En Cours</option>
+                 <option value="TERMINE">Terminé</option>
+               </select>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+            <button type="button" class="btn btn-primary" onclick="sauvegarderPlanif()">Valider et Notifier</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      let modalInstance; // Pour manipuler la modale Bootstrap
+
+      // ---------------------------------------------------------
+      // 1. INITIALISATION AU CHARGEMENT
+      // ---------------------------------------------------------
+      window.onload = function() {
+        // On interroge le serveur pour savoir qui est connecté
+        google.script.run
+          .withSuccessHandler(configurerInterface)
+          .withFailureHandler(afficherErreurCritique)
+          .verifierDroitsUtilisateur();
+      };
+
+      function configurerInterface(profil) {
+        // Affichage de l'email dans la navbar
+        document.getElementById('userEmail').textContent = profil.email;
+        
+        // Pré-remplissage du formulaire conducteur
+        const inputEmail = document.getElementById('inputEmail');
+        if(inputEmail) inputEmail.value = profil.email;
+
+        // Si l'utilisateur est Admin (Garage), on affiche le bouton d'accès
+        if (profil.estAdmin) {
+          document.getElementById('btnSwitchAdmin').classList.remove('d-none');
+        }
+      }
+
+      function afficherErreurCritique(err) {
+        alert("Erreur critique de chargement : " + err);
+      }
+
+      // ---------------------------------------------------------
+      // 2. ROUTING SPA (Changement de vue)
+      // ---------------------------------------------------------
+      function basculerVue(vue) {
+        // Masquer toutes les sections
+        document.querySelectorAll('.section-app').forEach(el => el.classList.remove('active-section'));
+        
+        if (vue === 'conducteur') {
+          document.getElementById('vue-conducteur').classList.add('active-section');
+          document.getElementById('btnSwitchDriver').classList.add('d-none');
+          document.getElementById('btnSwitchAdmin').classList.remove('d-none');
+        } else if (vue === 'garage') {
+          document.getElementById('vue-garage').classList.add('active-section');
+          document.getElementById('btnSwitchAdmin').classList.add('d-none');
+          document.getElementById('btnSwitchDriver').classList.remove('d-none');
+          // Charger les données fraîches quand on arrive sur le tableau de bord
+          chargerDonneesGarage();
+        }
+      }
+
+      // ---------------------------------------------------------
+      // 3. LOGIQUE VUE CONDUCTEUR (Formulaire)
+      // ---------------------------------------------------------
+      document.getElementById('formReparation').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const btn = this.querySelector('button[type="submit"]');
+        const texteOriginal = btn.innerHTML;
+        
+        // UI Feedback
+        btn.disabled = true; 
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Envoi...';
+        
+        const data = Object.fromEntries(new FormData(this).entries());
+
+        google.script.run
+          .withSuccessHandler((res) => {
+            alert(res.message);
+            if(res.succes) {
+              this.reset();
+              // On remet l'email car le reset l'efface
+              const emailUser = document.getElementById('userEmail').textContent;
+              document.getElementById('inputEmail').value = emailUser;
+            }
+            btn.disabled = false;
+            btn.innerHTML = texteOriginal;
+          })
+          .withFailureHandler((err) => {
+            alert("Erreur système : " + err);
+            btn.disabled = false;
+            btn.innerHTML = texteOriginal;
+          })
+          .enregistrerNouvelleDemande(data);
+      });
+
+      // ---------------------------------------------------------
+      // 4. LOGIQUE VUE GARAGE (Tableau de bord)
+      // ---------------------------------------------------------
+      function chargerDonneesGarage() {
+        const tbody = document.getElementById('corpsTableau');
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-5"><div class="spinner-border text-primary"></div><p class="mt-2 text-muted">Chargement des dossiers...</p></td></tr>';
+        
+        google.script.run
+          .withSuccessHandler(afficherTableau)
+          .withFailureHandler(err => tbody.innerHTML = `<tr><td colspan="5" class="text-danger text-center">Erreur: ${err}</td></tr>`)
+          .recupererListeReparations();
+      }
+
+      function afficherTableau(liste) {
+        const tbody = document.getElementById('corpsTableau');
+        
+        if(!liste || liste.length === 0) {
+           tbody.innerHTML = '<tr><td colspan="5" class="text-center py-5 text-muted">Aucune demande de réparation en cours.</td></tr>'; 
+           return;
+        }
+        
+        tbody.innerHTML = liste.map(item => {
+          // Gestion des couleurs de badges
+          let badgeColor = 'secondary';
+          if(item.statut === 'EN_ATTENTE') badgeColor = 'warning text-dark';
+          else if(item.statut === 'PLANIFIE') badgeColor = 'info text-dark';
+          else if(item.statut === 'TERMINE') badgeColor = 'success';
+
+          return `
+          <tr>
+            <td class="ps-4">
+              <strong>${item.vehicule}</strong>
+              <div class="small text-muted"><i class="bi bi-geo-alt"></i> ${item.garage}</div>
+            </td>
+            <td>
+              ${item.conducteur}<br>
+              <small class="text-muted" style="font-size:0.8em">${item.email}</small>
+            </td>
+            <td><span class="badge bg-${badgeColor}">${item.statut}</span></td>
+            <td>${item.dateIntervention}</td>
+            <td class="text-end pe-4">
+               <div class="btn-group" role="group">
+                 <button class="btn btn-sm btn-outline-danger" title="Envoyer Bon Intervention (PDF)" onclick="envoyerPDF('${item.id}')">
+                   <i class="bi bi-file-earmark-pdf"></i>
+                 </button>
+                 <button class="btn btn-sm btn-primary" onclick="ouvrirModal('${item.id}', '${item.statut}', '${item.dateIntervention}')">
+                   <i class="bi bi-calendar-check"></i> Gérer
+                 </button>
+               </div>
+            </td>
+          </tr>
+        `}).join('');
+      }
+
+      // ---------------------------------------------------------
+      // 5. GESTION DU PDF
+      // ---------------------------------------------------------
+      function envoyerPDF(id) {
+        if(!confirm("Voulez-vous générer le Bon d'Intervention et l'envoyer par email au conducteur ?")) return;
+        
+        document.body.style.cursor = 'wait'; // Indique que ça travaille
+        
+        google.script.run
+          .withSuccessHandler(res => {
+            document.body.style.cursor = 'default';
+            alert(res.message);
+          })
+          .withFailureHandler(err => {
+             document.body.style.cursor = 'default';
+             alert("Erreur PDF : " + err);
+          })
+          .genererEtEnvoyerPDF(id);
+      }
+
+      // ---------------------------------------------------------
+      // 6. GESTION DE LA MODALE
+      // ---------------------------------------------------------
+      function ouvrirModal(id, statutActuel, dateActuelle) {
+        document.getElementById('hiddenId').value = id;
+        document.getElementById('modalStatut').value = statutActuel;
+        
+        // Formatage de la date pour l'input type="date" (YYYY-MM-DD)
+        // Note: dateActuelle arrive souvent au format FR (DD/MM/YYYY), il faut le gérer si besoin.
+        // Ici on laisse vide si format incorrect pour forcer une nouvelle saisie propre.
+        document.getElementById('modalDate').value = ""; 
+        
+        modalInstance = new bootstrap.Modal(document.getElementById('modalPlanif'));
+        modalInstance.show();
+      }
+
+      function sauvegarderPlanif() {
+        const id = document.getElementById('hiddenId').value;
+        const date = document.getElementById('modalDate').value;
+        const statut = document.getElementById('modalStatut').value;
+        
+        // Validation simple
+        if (statut === 'PLANIFIE' && !date) {
+          alert("Pour planifier, une date est obligatoire.");
+          return;
+        }
+
+        const btn = document.querySelector('.modal-footer .btn-primary');
+        const txtOriginal = btn.innerHTML;
+        btn.disabled = true; btn.innerHTML = "Sauvegarde...";
+
+        google.script.run
+          .withSuccessHandler(res => {
+            alert(res.message);
+            modalInstance.hide();
+            btn.disabled = false; btn.innerHTML = txtOriginal;
+            chargerDonneesGarage(); // Rafraîchissement automatique
+          })
+          .withFailureHandler(err => {
+            alert("Erreur : " + err);
+            btn.disabled = false; btn.innerHTML = txtOriginal;
+          })
+          .mettreAJourIntervention(id, statut, date);
+      }
+    </script>
+  </body>
+</html>
