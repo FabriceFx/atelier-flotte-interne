@@ -1,4 +1,4 @@
-# 🚗 Gestion de Flotte Automobile (GAS)
+# 🚗 Gestion de flotte automobile (GAS)
 
 Une Single Page Application interne pour gérer les demandes de réparation et le planning de l'atelier mécanique de l'entreprise.
 
@@ -10,7 +10,7 @@ Une Single Page Application interne pour gérer les demandes de réparation et l
 * **Notifications :** Alertes email HTML automatiques pour le conducteur (Confirmation, Planification, Fin).
 * **Documents :** Génération et envoi automatique de Bons d'Intervention au format PDF.
 
-## 🛠 Stack Technique
+## 🛠 Stack technique
 
 * **Backend :** Google Apps Script (Moteur V8).
 * **Frontend :** HTML5, Bootstrap 5 (CDN), JavaScript (ES6+).
@@ -30,7 +30,7 @@ Une Single Page Application interne pour gérer les demandes de réparation et l
 5.  Exécuter la fonction `initialiserStructure()` pour préparer le Sheet.
 6.  Déployer en tant qu'Application Web.
 
-## ⚠️ Configuration Requise
+## ⚠️ Configuration requise
 
 * Modifier la constante `LISTE_ADMINS` dans `Code.gs` pour définir les gestionnaires.
 * Activer les scopes OAuth via le fichier `appsscript.json`.
