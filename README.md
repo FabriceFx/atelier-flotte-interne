@@ -1,5 +1,14 @@
 # 🚗 Gestion de flotte automobile (GAS)
 
+
+[🇫🇷 Version Française](#-version-française) | [🇬🇧 English Version](#-english-version)
+<a href="https://developers.google.com/apps-script"><img src="https://img.shields.io/badge/Google%20Apps%20Script-4285F4?style=for-the-badge&logo=google-apps-script&logoColor=white" alt="Google Apps Script"></a>
+<a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-indigo?style=for-the-badge" alt="License: MIT"></a>
+<a href="README.md"><img src="https://img.shields.io/badge/Status-Production-brightgreen?style=for-the-badge" alt="Status: Production"></a>
+
+
+## 🇫🇷 Version Française
+
 Une Single Page Application interne pour gérer les demandes de réparation et le planning de l'atelier mécanique de l'entreprise.
 
 ## 📋 Fonctionnalités
@@ -34,3 +43,12 @@ Une Single Page Application interne pour gérer les demandes de réparation et l
 
 * Modifier la constante `LISTE_ADMINS` dans `Code.gs` pour définir les gestionnaires.
 * Activer les scopes OAuth via le fichier `appsscript.json`.
+
+
+---
+## 🇬🇧 English Version
+
+> English translation coming soon.
+
+---
+<p align="center"><a href="https://faucheux.bzh" target="_blank" style="color: inherit; text-decoration: none;">&lt;&gt; par Fabrice Faucheux</a></p>
